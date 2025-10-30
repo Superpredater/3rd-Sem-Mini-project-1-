@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fake News Detection AI Chatbot</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { background-color: #0f172a; color: #e2e8f0; font-family: 'Poppins', sans-serif; }
+    .chat-bubble { max-width: 75%; padding: 10px 15px; border-radius: 1rem; margin: 6px 0; line-height: 1.5; }
+    .bot { background-color: #1e293b; align-self: flex-start; }
+    .user { background-color: #2563eb; align-self: flex-end; color: white; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .hidden { display: none; }
+    .pulse {
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.4; }
+      50% { opacity: 1; }
+      100% { opacity: 0.4; }
+    }
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-[#1e293b] p-6 flex flex-col space-y-6">
+    <h1 class="text-xl font-bold text-white">🧠 Fake News AI</h1>
+    <nav class="flex flex-col space-y-4">
+      <button id="chatTab" class="text-left text-gray-300 hover:text-blue-400">💬 Chat</button>
+      <button id="analyticsTab" class="text-left text-gray-300 hover:text-blue-400">📊 Analytics</button>
+      <button id="educationTab" class="text-left text-gray-300 hover:text-blue-400">🎓 Education</button>
+      <button id="historyTab" class="text-left text-gray-300 hover:text-blue-400">🕓 History</button>
+    </nav>
+  </aside>
+
+  <!-- Main Section -->
+  <main class="flex-1 flex flex-col bg-[#0f172a] p-6 space-y-6">
+    <header class="flex justify-between items-center border-b border-gray-700 pb-3">
+      <h2 id="mainTitle" class="text-2xl font-semibold text-white">Fake News Detection AI Chatbot</h2>
+      <button id="newChatBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg">🆕 New Chat</button>
+    </header>
+
+    <!-- Chat Section -->
+    <section id="chatSection" class="flex flex-col flex-1 bg-[#1e293b] rounded-2xl p-5 overflow-y-auto scrollbar-hide">
+      <div id="messages" class="flex flex-col space-y-3">
+        <div class="chat-bubble bot">
+          👋 Hi! I'm your Fake News Detector. You can type or speak a news headline, URL, or text to verify it. 🎤
+        </div>
+      </div>
+    </section>
+
+    <!-- Analytics Section -->
+    <section id="analyticsSection" class="hidden flex flex-col flex-1 bg-[#1e293b] rounded-2xl p-6">
+      <h3 class="text-xl font-semibold mb-4">📊 Real-Time Analytics</h3>
+      <div class="grid grid-cols-3 gap-6 mb-6">
+        <div class="bg-[#0f172a] p-4 rounded-xl text-center">
+          <h4 class="text-lg font-bold text-blue-400">Total News</h4>
+          <p id="analyticTotal" class="text-2xl mt-2">0</p>
+        </div>
+        <div class="bg-[#0f172a] p-4 rounded-xl text-center">
+          <h4 class="text-lg font-bold text-green-400">Real Detected</h4>
+          <p id="analyticReal" class="text-2xl mt-2">0</p>
+        </div>
+        <div class="bg-[#0f172a] p-4 rounded-xl text-center">
+          <h4 class="text-lg font-bold text-red-400">Fake Detected</h4>
+          <p id="analyticFake" class="text-2xl mt-2">0</p>
+        </div>
+      </div>
+      <div class="bg-[#0f172a] p-4 rounded-xl">
+        <h4 class="text-lg font-bold mb-3 text-yellow-400">🔮 Fake News Probability (Trend)</h4>
+        <canvas id="fakeNewsChart" height="150"></canvas>
+      </div>
+    </section>
+
+    <!-- Input Area -->
+    <div id="chatInputSection" class="flex space-x-2 items-center">
+      <button id="voiceBtn" class="bg-gray-700 hover:bg-blue-600 text-white px-3 py-2 rounded-xl">🎤</button>
+      <input id="userInput" type="text" placeholder="Type your message or paste a URL..." class="flex-1 bg-[#1e293b] text-gray-200 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <button id="sendBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl">Send</button>
+    </div>
+  </main>
+
+  <!-- Right Panel -->
+  <aside class="w-96 bg-[#1e293b] p-5 flex flex-col space-y-6">
+    <div>
+      <h2 class="text-lg font-semibold mb-3 border-b border-gray-600 pb-1">🎓 Educational Insights</h2>
+      <ul id="eduList" class="list-disc text-sm ml-4 space-y-2 text-gray-300">
+        <li>Be skeptical of sensationalist headlines.</li>
+        <li>Cross-check news from multiple credible sites.</li>
+        <li>Fake news often uses emotional, simple language.</li>
+        <li>Look for the author and source credibility.</li>
+      </ul>
+    </div>
+    <div>
+      <h2 class="text-lg font-semibold mb-3 border-b border-gray-600 pb-1">🕓 Chat History</h2>
+      <ul id="historyList" class="text-sm text-gray-300 space-y-2 max-h-60 overflow-y-auto scrollbar-hide"></ul>
+    </div>
+  </aside>
+
+  <!-- Script -->
+  <script>
+    const userInput = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const messages = document.getElementById("messages");
+    const totalEl = document.getElementById("analyticTotal");
+    const fakeEl = document.getElementById("analyticFake");
+    const realEl = document.getElementById("analyticReal");
+    const chatSection = document.getElementById("chatSection");
+    const analyticsSection = document.getElementById("analyticsSection");
+    const chatTab = document.getElementById("chatTab");
+    const analyticsTab = document.getElementById("analyticsTab");
+    const chatInputSection = document.getElementById("chatInputSection");
+    const voiceBtn = document.getElementById("voiceBtn");
+
+    let total = 0, fake = 0, real = 0;
+    let fakeTrend = [];
+    let chart;
+    let recognition;
+
+    // Initialize voice recognition if supported
+    if ('webkitSpeechRecognition' in window) {
+      recognition = new webkitSpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => voiceBtn.classList.add("pulse");
+      recognition.onend = () => voiceBtn.classList.remove("pulse");
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        userInput.value = transcript;
+        handleSend();
+      };
+    } else {
+      voiceBtn.disabled = true;
+      voiceBtn.textContent = "🎤 (N/A)";
+    }
+
+    voiceBtn.addEventListener("click", () => recognition && recognition.start());
+
+    // Chart rendering
+    function renderChart() {
+      const ctx = document.getElementById('fakeNewsChart').getContext('2d');
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: fakeTrend.map((_, i) => `Check ${i + 1}`),
+          datasets: [{
+            label: 'Fake News Probability (%)',
+            data: fakeTrend,
+            borderColor: '#f87171',
+            tension: 0.4,
+            fill: false
+          }]
+        },
+        options: {
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#cbd5e1' } },
+            y: { grid: { display: false }, ticks: { color: '#cbd5e1' } }
+          },
+          plugins: { legend: { labels: { color: '#e2e8f0' } } }
+        }
+      });
+    }
+
+    sendBtn.addEventListener("click", handleSend);
+    userInput.addEventListener("keypress", (e) => e.key === "Enter" && handleSend());
+
+    analyticsTab.addEventListener("click", () => {
+      chatSection.classList.add("hidden");
+      chatInputSection.classList.add("hidden");
+      analyticsSection.classList.remove("hidden");
+      renderChart();
+    });
+
+    chatTab.addEventListener("click", () => {
+      chatSection.classList.remove("hidden");
+      chatInputSection.classList.remove("hidden");
+      analyticsSection.classList.add("hidden");
+    });
+
+    function appendMessage(msg, sender) {
+      const div = document.createElement("div");
+      div.classList.add("chat-bubble", sender);
+      div.textContent = msg;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+
+      // Voice output for bot
+      if (sender === "bot") {
+        const utter = new SpeechSynthesisUtterance(msg);
+        utter.voice = speechSynthesis.getVoices()[0];
+        speechSynthesis.speak(utter);
+      }
+    }
+
+    function handleSend() {
+      const text = userInput.value.trim();
+      if (!text) return;
+      appendMessage(text, "user");
+      userInput.value = "";
+      simulateAIResponse(text);
+    }
+
+    function simulateAIResponse(input) {
+      appendMessage("🔍 Analyzing your input...", "bot");
+      setTimeout(() => {
+        messages.lastChild.remove();
+        const random = Math.random();
+        const isFake = random < 0.5;
+        let result, explanation;
+
+        if (isFake) {
+          fake++;
+          result = " This news appears *Fake*.";
+          explanation = "It shows emotional and biased language patterns, lacks credible sources, and may be misleading.";
+        } else {
+          real++;
+          result = " This news appears *Real*.";
+          explanation = "It aligns with reputable sources and has a balanced writing tone.";
+        }
+
+        total++;
+        fakeTrend.push(Math.floor(Math.random() * 50) + 30); // Simulated trend %
+        updateAnalytics();
+
+        appendMessage(result, "bot");
+        appendMessage(" Explanation: " + explanation, "bot");
+      }, 1200);
+    }
+
+    function updateAnalytics() {
+      totalEl.textContent = total;
+      fakeEl.textContent = fake;
+      realEl.textContent = real;
+      renderChart();
+    }
+  </script>
+</body>
+</html>
