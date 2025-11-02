@@ -13,14 +13,8 @@
     .user { background-color: #2563eb; align-self: flex-end; color: white; }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .hidden { display: none; }
-    .pulse {
-      animation: pulse 1s infinite;
-    }
-    @keyframes pulse {
-      0% { opacity: 0.4; }
-      50% { opacity: 1; }
-      100% { opacity: 0.4; }
-    }
+    .pulse { animation: pulse 1s infinite; }
+    @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
   </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -29,16 +23,16 @@
   <aside class="w-64 bg-[#1e293b] p-6 flex flex-col space-y-6">
     <h1 class="text-xl font-bold text-white">🧠 Fake News AI</h1>
     <nav class="flex flex-col space-y-4">
-      <button id="chatTab" class="text-left text-gray-300 hover:text-blue-400">💬 Chat</button>
-      <button id="analyticsTab" class="text-left text-gray-300 hover:text-blue-400">📊 Analytics</button>
-      <button id="educationTab" class="text-left text-gray-300 hover:text-blue-400">🎓 Education</button>
-      <button id="historyTab" class="text-left text-gray-300 hover:text-blue-400">🕓 History</button>
+      <button id="chatTab" class="text-left text-gray-300 hover:text-blue-400 transition">💬 Chat</button>
+      <button id="analyticsTab" class="text-left text-gray-300 hover:text-blue-400 transition">📊 Analytics</button>
+      <button id="educationTab" class="text-left text-gray-300 hover:text-blue-400 transition">🎓 Education</button>
+      <button id="historyTab" class="text-left text-gray-300 hover:text-blue-400 transition">🕓 History</button>
     </nav>
   </aside>
 
   <!-- Main Section -->
   <main class="flex-1 flex flex-col bg-[#0f172a] p-6 space-y-6">
-    <header class="flex justify-between items-center border-b border-gray-700 pb-3">
+    <header class="flex justify-between items-center border-b border-gray-700 pb-3 bg-gradient-to-r from-blue-800 to-indigo-700 rounded-xl px-4 py-2">
       <h2 id="mainTitle" class="text-2xl font-semibold text-white">Fake News Detection AI Chatbot</h2>
       <button id="newChatBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg">🆕 New Chat</button>
     </header>
@@ -85,7 +79,7 @@
 
   <!-- Right Panel -->
   <aside class="w-96 bg-[#1e293b] p-5 flex flex-col space-y-6">
-    <div>
+    <div id="educationPanel">
       <h2 class="text-lg font-semibold mb-3 border-b border-gray-600 pb-1">🎓 Educational Insights</h2>
       <ul id="eduList" class="list-disc text-sm ml-4 space-y-2 text-gray-300">
         <li>Be skeptical of sensationalist headlines.</li>
@@ -110,28 +104,46 @@
     const realEl = document.getElementById("analyticReal");
     const chatSection = document.getElementById("chatSection");
     const analyticsSection = document.getElementById("analyticsSection");
+    const chatInputSection = document.getElementById("chatInputSection");
     const chatTab = document.getElementById("chatTab");
     const analyticsTab = document.getElementById("analyticsTab");
-    const chatInputSection = document.getElementById("chatInputSection");
+    const educationTab = document.getElementById("educationTab");
+    const historyTab = document.getElementById("historyTab");
     const voiceBtn = document.getElementById("voiceBtn");
+    const eduList = document.getElementById("eduList");
+    const historyList = document.getElementById("historyList");
+    const newChatBtn = document.getElementById("newChatBtn");
 
     let total = 0, fake = 0, real = 0;
     let fakeTrend = [];
+    let educationTopics = [];
+    let chatHistory = [];
     let chart;
     let recognition;
 
-    // Initialize voice recognition if supported
-    if ('webkitSpeechRecognition' in window) {
+    // Persistent analytics
+    function loadAnalytics() {
+      const data = JSON.parse(localStorage.getItem("analytics"));
+      if (data) {
+        total = data.total;
+        fake = data.fake;
+        real = data.real;
+        fakeTrend = data.fakeTrend;
+        updateAnalytics();
+      }
+    }
+    function saveAnalytics() {
+      localStorage.setItem("analytics", JSON.stringify({ total, fake, real, fakeTrend }));
+    }
+
+    // Voice input
+    if ("webkitSpeechRecognition" in window) {
       recognition = new webkitSpeechRecognition();
       recognition.lang = "en-US";
-      recognition.continuous = false;
-      recognition.interimResults = false;
-
       recognition.onstart = () => voiceBtn.classList.add("pulse");
       recognition.onend = () => voiceBtn.classList.remove("pulse");
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        userInput.value = transcript;
+      recognition.onresult = (e) => {
+        userInput.value = e.results[0][0].transcript;
         handleSend();
       };
     } else {
@@ -143,60 +155,64 @@
 
     // Chart rendering
     function renderChart() {
-      const ctx = document.getElementById('fakeNewsChart').getContext('2d');
+      const ctx = document.getElementById("fakeNewsChart").getContext("2d");
       if (chart) chart.destroy();
       chart = new Chart(ctx, {
-        type: 'line',
+        type: "line",
         data: {
           labels: fakeTrend.map((_, i) => `Check ${i + 1}`),
           datasets: [{
-            label: 'Fake News Probability (%)',
+            label: "Fake News Probability (%)",
             data: fakeTrend,
-            borderColor: '#f87171',
+            borderColor: "#f87171",
             tension: 0.4,
-            fill: false
-          }]
+            fill: false,
+          }],
         },
         options: {
+          animation: { duration: 800, easing: "easeInOutCubic" },
           scales: {
-            x: { grid: { display: false }, ticks: { color: '#cbd5e1' } },
-            y: { grid: { display: false }, ticks: { color: '#cbd5e1' } }
+            x: { grid: { display: false }, ticks: { color: "#cbd5e1" } },
+            y: { grid: { display: false }, ticks: { color: "#cbd5e1" } },
           },
-          plugins: { legend: { labels: { color: '#e2e8f0' } } }
-        }
+          plugins: { legend: { labels: { color: "#e2e8f0" } } },
+        },
       });
     }
 
-    sendBtn.addEventListener("click", handleSend);
-    userInput.addEventListener("keypress", (e) => e.key === "Enter" && handleSend());
-
+    // Tabs
     analyticsTab.addEventListener("click", () => {
       chatSection.classList.add("hidden");
-      chatInputSection.classList.add("hidden");
       analyticsSection.classList.remove("hidden");
+      chatInputSection.classList.add("hidden");
       renderChart();
     });
-
     chatTab.addEventListener("click", () => {
       chatSection.classList.remove("hidden");
-      chatInputSection.classList.remove("hidden");
       analyticsSection.classList.add("hidden");
+      chatInputSection.classList.remove("hidden");
+      eduList.parentElement.classList.remove("hidden");
     });
+    educationTab.addEventListener("click", () => renderEducation());
+    historyTab.addEventListener("click", () => renderHistory());
 
+    // Message handling
     function appendMessage(msg, sender) {
       const div = document.createElement("div");
       div.classList.add("chat-bubble", sender);
       div.textContent = msg;
       messages.appendChild(div);
       messages.scrollTop = messages.scrollHeight;
-
-      // Voice output for bot
       if (sender === "bot") {
         const utter = new SpeechSynthesisUtterance(msg);
         utter.voice = speechSynthesis.getVoices()[0];
         speechSynthesis.speak(utter);
       }
     }
+
+    sendBtn.addEventListener("click", handleSend);
+    userInput.addEventListener("keypress", (e) => e.key === "Enter" && handleSend());
+    newChatBtn.addEventListener("click", () => { messages.innerHTML = ""; appendMessage("👋 New chat started. Type or speak to begin!", "bot"); });
 
     function handleSend() {
       const text = userInput.value.trim();
@@ -206,30 +222,38 @@
       simulateAIResponse(text);
     }
 
+    // AI Simulation
     function simulateAIResponse(input) {
       appendMessage("🔍 Analyzing your input...", "bot");
       setTimeout(() => {
         messages.lastChild.remove();
         const random = Math.random();
         const isFake = random < 0.5;
-        let result, explanation;
-
-        if (isFake) {
-          fake++;
-          result = " This news appears *Fake*.";
-          explanation = "It shows emotional and biased language patterns, lacks credible sources, and may be misleading.";
-        } else {
-          real++;
-          result = " This news appears *Real*.";
-          explanation = "It aligns with reputable sources and has a balanced writing tone.";
-        }
-
+        let result = isFake ? "⚠️ This news appears *Fake*." : "✅ This news appears *Real*.";
+        let explanation = isFake
+          ? "It shows emotional and biased language patterns, lacks credible sources."
+          : "It aligns with reputable sources and has balanced writing.";
         total++;
-        fakeTrend.push(Math.floor(Math.random() * 50) + 30); // Simulated trend %
+        isFake ? fake++ : real++;
+        fakeTrend.push(Math.floor((fake / total) * 100));
         updateAnalytics();
+        saveAnalytics();
 
+        educationTopics.push({
+          query: input,
+          time: new Date().toLocaleTimeString(),
+          isFake,
+          links: [
+            `https://www.google.com/search?q=${encodeURIComponent(input)}+news`,
+            `https://www.bbc.com/search?q=${encodeURIComponent(input)}`,
+            `https://www.reuters.com/site-search/?query=${encodeURIComponent(input)}`,
+          ],
+        });
+
+        chatHistory.push(input);
+        updateHistoryList();
         appendMessage(result, "bot");
-        appendMessage(" Explanation: " + explanation, "bot");
+        appendMessage("🧠 Explanation: " + explanation, "bot");
       }, 1200);
     }
 
@@ -239,6 +263,52 @@
       realEl.textContent = real;
       renderChart();
     }
+
+    // Education Tab
+    function renderEducation() {
+      eduList.innerHTML = "";
+      if (educationTopics.length === 0) {
+        eduList.innerHTML = "<li>No educational insights yet. Try searching some news!</li>";
+        return;
+      }
+      educationTopics.forEach((item) => {
+        const li = document.createElement("li");
+        li.className = "p-3 bg-[#0f172a] rounded-lg hover:bg-blue-900 transition";
+        li.innerHTML = `
+          <strong class="text-blue-400">${item.query}</strong>
+          <p class="text-xs text-gray-400">Checked at ${item.time} — ${
+          item.isFake ? "⚠️ Fake" : "✅ Real"
+        }</p>
+          <div class="mt-2 space-y-1">
+            ${item.links
+              .map(
+                (l) =>
+                  `<a href="${l}" target="_blank" class="text-sm text-yellow-400 hover:underline">${l}</a>`
+              )
+              .join("<br>")}
+          </div>`;
+        eduList.appendChild(li);
+      });
+    }
+
+    // History
+    function updateHistoryList() {
+      historyList.innerHTML = "";
+      chatHistory.forEach((h, i) => {
+        const li = document.createElement("li");
+        li.textContent = h;
+        li.className = "cursor-pointer hover:text-blue-400";
+        li.onclick = () => appendMessage(`🔁 Rechecking: ${h}`, "bot");
+        historyList.appendChild(li);
+      });
+    }
+    function renderHistory() {
+      chatSection.classList.add("hidden");
+      analyticsSection.classList.add("hidden");
+      chatInputSection.classList.add("hidden");
+    }
+
+    window.onload = loadAnalytics;
   </script>
 </body>
 </html>
