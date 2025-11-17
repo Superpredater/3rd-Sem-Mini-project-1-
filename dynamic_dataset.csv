@@ -1,0 +1,23 @@
+text,label,confidence,timestamp
+hi,REAL,0.0,2025-11-15T19:47:06.710084
+hi,REAL,0.0,2025-11-15T19:55:34.616700
+I am fool,REAL,0.0,2025-11-15T19:55:46.135650
+hi,REAL,0.0,2025-11-15T20:10:21.661991
+hello,FAKE,50.0,2025-11-15T20:28:51.614885
+hi,FAKE,50.0,2025-11-15T20:29:03.504914
+Why BJP suspended ex union minister RK Singh day after Bihar win,REAL,54.47,2025-11-15T20:29:33.714087
+"According to the letters announcing the suspension, the action was taken against RK Singh, who is also a former BJP MP from Ara, and MLC Ashok Agarwal due to anti-party activities.",FAKE,50.0,2025-11-15T20:30:22.804545
+hi,FAKE,50.0,2025-11-15T20:37:58.089866
+hello,FAKE,50.0,2025-11-15T20:38:26.276351
+hello,FAKE,50.0,2025-11-15T20:43:13.674775
+Bihar Election ECI Result 2025: How NDA Missed Historic 2010 Tally By A Whisker,FAKE,50.0,2025-11-15T20:49:14.767287
+"Bihar Election ECI Result 2025: The National Democratic Alliance (NDA) won 202 seats in the Bihar Assembly Elections, results for which was announced by the Election Commission of India (ECI) on Friday. The NDA had scored 206 seats in the 2010 assembly elections and fell short of the historic tally by just four seats this time. Notably, during the counting, the NDA's lead once surged to 208 seats, but it finally settled for 202 seats as the BJP won 89 seats, JDU 85, LJPRV 19, HAM 5, and RLM 4.",FAKE,51.06062598349468,2025-11-15T20:49:37.020679
+"Bihar Election ECI Result 2025: The National Democratic Alliance (NDA) won 202 seats in the Bihar Assembly Elections, results for which was announced by the Election Commission of India (ECI) on Friday. The NDA had scored 206 seats in the 2010 assembly elections and fell short of the historic tally by just four seats this time. Notably, during the counting, the NDA's lead once surged to 208 seats, but it finally settled for 202 seats as the BJP won 89 seats, JDU 85, LJPRV 19, HAM 5, and RLM 4.",FAKE,51.06062598349468,2025-11-15T20:50:09.227125
+"CARnage on wheels: How Delhi’s 1st suicide car bombing reveals an unseen, deadly and hard-to-detect SVBIED threat",FAKE,50.0,2025-11-15T20:50:25.968485
+Al Falah Imam's Wife Details How Dr Muzammil Slipped Into Their Daily Lives,FAKE,50.0,2025-11-15T20:51:14.217994
+Dharmendra Converted To Islam To Marry Hema Malini: The Complete Story Of Their Secret Nikah And Enduring Love,FAKE,53.782392219516154,2025-11-15T20:51:49.283717
+"Shah Rukh Khan announces ‘affordable’ property in Dubai worth Rs 4,000 crore, says his mother would have been proud: ‘Dekho papa ki building hai’",REAL,54.08415068410195,2025-11-15T20:52:41.336788
+xxcxc,FAKE,50.0,2025-11-15T21:49:51.603780
+"Disowning Family, Quitting Politics"": Tejashwi Yadav's Sister After RJD Rout",FAKE,50.0,2025-11-16T15:00:47.892530
+Trump Mulls New Green Card Rule: Will Indians be Affected?,REAL,54.08415068410195,2025-11-16T15:01:36.415421
+"The Trump administration is preparing a policy shift that could make it more difficult for immigrants from countries covered by the President's travel ban to obtain green cards and other immigration benefits.  According to internal Department of Homeland Security documents quoted by The New York Times, US Citizenship and Immigration Services (USCIS) would treat ""country-specific factors"" outlined in the travel ban as ""significant negative factors"" when assessing a range of immigration applications.",REAL,57.0426164377972,2025-11-16T15:01:59.475116
