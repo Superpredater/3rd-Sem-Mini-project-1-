@@ -13,89 +13,730 @@
     .user { background-color: #2563eb; align-self: flex-end; color: white; }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .hidden { display: none; }
-    .pulse { animation: pulse 1s infinite; }
-    @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+    .pulse {
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.4; }
+      50% { opacity: 1; }
+      100% { opacity: 0.4; }
+    }
   </style>
 </head>
-<body class="flex h-screen overflow-hidden">
+<body class="bg-[#0f172a] text-gray-100">
 
-  <!-- Sidebar -->
-  <aside class="w-64 bg-[#1e293b] p-6 flex flex-col space-y-6">
-    <h1 class="text-xl font-bold text-white">🧠 Fake News AI</h1>
-    <nav class="flex flex-col space-y-4">
-      <button id="chatTab" class="text-left text-gray-300 hover:text-blue-400 transition">💬 Chat</button>
-      <button id="analyticsTab" class="text-left text-gray-300 hover:text-blue-400 transition">📊 Analytics</button>
-      <button id="educationTab" class="text-left text-gray-300 hover:text-blue-400 transition">🎓 Education</button>
-      <button id="historyTab" class="text-left text-gray-300 hover:text-blue-400 transition">🕓 History</button>
-    </nav>
-  </aside>
+  <!-- LOGIN SECTION -->
+  <section id="loginSection" class="min-h-screen flex items-center justify-center">
+    <div class="bg-[#1e293b] p-8 rounded-2xl shadow-xl w-full max-w-md space-y-6">
+      <h2 class="text-2xl font-semibold text-center mb-2">Sign in</h2>
+      <p class="text-sm text-center text-gray-400 mb-4">Login to continue to Fake News AI</p>
 
-  <!-- Main Section -->
-  <main class="flex-1 flex flex-col bg-[#0f172a] p-6 space-y-6">
-    <header class="flex justify-between items-center border-b border-gray-700 pb-3 bg-gradient-to-r from-blue-800 to-indigo-700 rounded-xl px-4 py-2">
-      <h2 id="mainTitle" class="text-2xl font-semibold text-white">Fake News Detection AI Chatbot</h2>
-      <button id="newChatBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg">🆕 New Chat</button>
-    </header>
-
-    <!-- Chat Section -->
-    <section id="chatSection" class="flex flex-col flex-1 bg-[#1e293b] rounded-2xl p-5 overflow-y-auto scrollbar-hide">
-      <div id="messages" class="flex flex-col space-y-3">
-        <div class="chat-bubble bot">
-          👋 Hi! I'm your Fake News Detector. You can type or speak a news headline, URL, or text to verify it. 🎤
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label for="loginIdentifier" class="block text-sm mb-1">User ID / Email / Mobile number</label>
+          <input
+            id="loginIdentifier"
+            type="text"
+            class="w-full bg-[#0f172a] border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter user ID, email or mobile"
+            required
+          />
         </div>
-      </div>
-    </section>
+        <div>
+          <label for="loginPassword" class="block text-sm mb-1">Password</label>
+          <input
+            id="loginPassword"
+            type="password"
+            class="w-full bg-[#0f172a] border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter your password"
+            required
+          />
+        </div>
+        <p id="loginError" class="text-red-400 text-sm h-5"></p>
 
-    <!-- Analytics Section -->
-    <section id="analyticsSection" class="hidden flex flex-col flex-1 bg-[#1e293b] rounded-2xl p-6">
-      <h3 class="text-xl font-semibold mb-4">📊 Real-Time Analytics</h3>
-      <div class="grid grid-cols-3 gap-6 mb-6">
-        <div class="bg-[#0f172a] p-4 rounded-xl text-center">
-          <h4 class="text-lg font-bold text-blue-400">Total News</h4>
-          <p id="analyticTotal" class="text-2xl mt-2">0</p>
-        </div>
-        <div class="bg-[#0f172a] p-4 rounded-xl text-center">
-          <h4 class="text-lg font-bold text-green-400">Real Detected</h4>
-          <p id="analyticReal" class="text-2xl mt-2">0</p>
-        </div>
-        <div class="bg-[#0f172a] p-4 rounded-xl text-center">
-          <h4 class="text-lg font-bold text-red-400">Fake Detected</h4>
-          <p id="analyticFake" class="text-2xl mt-2">0</p>
-        </div>
-      </div>
-      <div class="bg-[#0f172a] p-4 rounded-xl">
-        <h4 class="text-lg font-bold mb-3 text-yellow-400">🔮 Fake News Probability (Trend)</h4>
-        <canvas id="fakeNewsChart" height="150"></canvas>
-      </div>
-    </section>
+        <button
+          type="submit"
+          class="w-full bg-blue-600 hover:bg-blue-700 transition-colors text-white py-2 rounded-lg text-sm font-medium">
+          Sign in
+        </button>
 
-    <!-- Input Area -->
-    <div id="chatInputSection" class="flex space-x-2 items-center">
-      <button id="voiceBtn" class="bg-gray-700 hover:bg-blue-600 text-white px-3 py-2 rounded-xl">🎤</button>
-      <input id="userInput" type="text" placeholder="Type your message or paste a URL..." class="flex-1 bg-[#1e293b] text-gray-200 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
-      <button id="sendBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl">Send</button>
+        <div class="flex items-center my-4">
+          <div class="flex-1 h-px bg-gray-600"></div>
+          <span class="px-2 text-xs text-gray-400">OR</span>
+          <div class="flex-1 h-px bg-gray-600"></div>
+        </div>
+
+        <button
+          type="button"
+          id="googleLogin"
+          class="w-full border border-gray-500 rounded-lg py-2 mb-2 flex items-center justify-center gap-2 text-sm hover:bg-white/5">
+          <span class="text-lg">G</span>
+          <span>Continue with Google</span>
+        </button>
+
+        <button
+          type="button"
+          id="twitterLogin"
+          class="w-full border border-gray-500 rounded-lg py-2 flex items-center justify-center gap-2 text-sm hover:bg-white/5">
+          <span class="text-lg">𝕏</span>
+          <span>Continue with Twitter</span>
+        </button>
+
+        <p class="text-sm text-center text-gray-300 mt-4">
+          Don't have an account?
+          <a href="#" id="goToSignup" class="text-blue-400 hover:underline">Sign up</a>
+        </p>
+      </form>
     </div>
-  </main>
+  </section>
 
-  <!-- Right Panel -->
-  <aside class="w-96 bg-[#1e293b] p-5 flex flex-col space-y-6">
-    <div id="educationPanel">
-      <h2 class="text-lg font-semibold mb-3 border-b border-gray-600 pb-1">🎓 Educational Insights</h2>
-      <ul id="eduList" class="list-disc text-sm ml-4 space-y-2 text-gray-300">
-        <li>Be skeptical of sensationalist headlines.</li>
-        <li>Cross-check news from multiple credible sites.</li>
-        <li>Fake news often uses emotional, simple language.</li>
-        <li>Look for the author and source credibility.</li>
-      </ul>
+  <!-- SIGNUP SECTION -->
+  <section id="signupSection" class="hidden min-h-screen flex items-center justify-center">
+    <div class="bg-[#1e293b] p-8 rounded-2xl shadow-xl w-full max-w-md space-y-6">
+      <h2 class="text-2xl font-semibold text-center mb-2">Create account</h2>
+      <p class="text-sm text-center text-gray-400 mb-4">Sign up to use Fake News AI</p>
+
+      <form id="signupForm" class="space-y-4">
+        <div>
+          <label for="signupName" class="block text-sm mb-1">Full Name</label>
+          <input
+            id="signupName"
+            type="text"
+            class="w-full bg-[#0f172a] border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter your name"
+            required
+          />
+        </div>
+        <div>
+          <label for="signupEmail" class="block text-sm mb-1">Email</label>
+          <input
+            id="signupEmail"
+            type="email"
+            class="w-full bg-[#0f172a] border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="example@mail.com"
+            required
+          />
+        </div>
+        <div>
+          <label for="signupPhone" class="block text-sm mb-1">Mobile number</label>
+          <input
+            id="signupPhone"
+            type="tel"
+            class="w-full bg-[#0f172a] border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter your mobile number"
+            required
+          />
+        </div>
+        <div>
+          <label for="signupPassword" class="block text-sm mb-1">Password</label>
+          <input
+            id="signupPassword"
+            type="password"
+            class="w-full bg-[#0f172a] border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Strong password"
+            required
+          />
+          <p class="text-xs text-gray-400 mt-1">
+            Must have 1 capital letter, 1 special character, 1 number, and be at least 8 characters long.
+          </p>
+        </div>
+        <div>
+          <label for="signupOccupation" class="block text-sm mb-1">Occupation</label>
+          <select
+            id="signupOccupation"
+            class="w-full bg-[#0f172a] border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">Select occupation</option>
+            <option>Student</option>
+            <option>IT Manager</option>
+            <option>Developer</option>
+            <option>Teacher</option>
+            <option>Researcher</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <p id="signupError" class="text-red-400 text-sm h-5"></p>
+
+        <button
+          type="submit"
+          class="w-full bg-green-600 hover:bg-green-700 transition-colors text-white py-2 rounded-lg text-sm font-medium">
+          Sign up
+        </button>
+
+        <p class="text-sm text-center text-gray-300 mt-4">
+          Already have an account?
+          <a href="#" id="goToLogin" class="text-blue-400 hover:underline">Sign in</a>
+        </p>
+      </form>
     </div>
+  </section>
+
+  <!-- PROFILE SECTION -->
+  <section id="profileSection" class="hidden min-h-screen flex items-center justify-center">
+    <div class="bg-[#1e293b] p-8 rounded-2xl shadow-xl w-full max-w-xl space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-semibold">Profile</h2>
+          <p class="text-sm text-gray-400">Manage your account details</p>
+        </div>
+        <button
+          id="logoutBtn"
+          class="text-xs bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg">
+          Logout
+        </button>
+      </div>
+
+      <!-- Profile photo -->
+      <div class="flex flex-col items-center space-y-3">
+        <div class="relative group">
+          <img id="profileImage"
+     src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAHUlEQVR42u3BMQEAAADCoPdPbQ8HFAAAAAAAAAAAwG8GdgAAGKQECwAAAABJRU5ErkJggg=="
+     alt="Profile"
+     class="w-24 h-24 rounded-full object-cover border-2 border-gray-500"/>
+
+          <!-- Plus symbol -->
+          <div class="absolute bottom-0 right-0 bg-blue-600 rounded-full p-1">
+            <span class="text-xs font-bold">+</span>
+          </div>
+          <!-- Pencil edit on hover -->
+          <button
+            id="addPhotoBtn"
+            type="button"
+            class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+            </svg>
+          </button>
+          <input type="file" id="profileImageInput" accept="image/*" class="hidden" />
+        </div>
+        <p class="text-xs text-gray-400">Click photo to add or edit your profile picture</p>
+      </div>
+
+      <!-- Profile form -->
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm mb-1" for="profileName">Full Name</label>
+          <input
+            id="profileName"
+            type="text"
+            class="w-full bg-[#0f172a] border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm mb-1" for="profileEmail">Email</label>
+            <input
+              id="profileEmail"
+              type="email"
+              class="w-full bg-[#0f172a] border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm mb-1" for="profilePhone">Mobile number</label>
+            <input
+              id="profilePhone"
+              type="tel"
+              class="w-full bg-[#0f172a] border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm mb-1" for="profileOccupation">Occupation</label>
+          <input
+            id="profileOccupation"
+            type="text"
+            class="w-full bg-[#0f172a] border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2">
+        <div class="space-x-2">
+          <button
+            id="editProfileBtn"
+            type="button"
+            class="bg-gray-600 hover:bg-gray-500 text-sm px-4 py-1.5 rounded-lg">
+            Edit
+          </button>
+          <button
+            id="saveProfileBtn"
+            type="button"
+            class="hidden bg-green-600 hover:bg-green-700 text-sm px-4 py-1.5 rounded-lg">
+            Save
+          </button>
+        </div>
+        <button
+          id="goToAppBtn"
+          type="button"
+          class="bg-blue-600 hover:bg-blue-700 text-sm px-4 py-1.5 rounded-lg">
+          Go to Fake News AI
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- APP SECTION: ORIGINAL FAKE NEWS AI LAYOUT -->
+  <div id="appShell" class="hidden flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-[#1e293b] p-6 flex flex-col space-y-6">
+      <h1 class="text-xl font-bold text-white"> Fake News AI</h1>
+      <nav class="flex flex-col space-y-4">
+        <button id="chatTab" class="text-left text-gray-300 hover:text-blue-400">Chat</button>
+        <button id="analyticsTab" class="text-left text-gray-300 hover:text-blue-400">Analytics</button>
+        <button id="educationTab" class="text-left text-gray-300 hover:text-blue-400">Education</button>
+        <button id="profileTab" class="text-left text-gray-300 hover:text-blue-400"> Profile</button>
+      </nav>
+    </aside>
+
+    <!-- Main Section -->
+    <main class="flex-1 flex flex-col bg-[#0f172a] p-6 space-y-6">
+      <header class="flex justify-between items-center border-b border-gray-700 pb-3">
+        <h2 id="mainTitle" class="text-2xl font-semibold text-white">Fake News Detection AI Chatbot</h2>
+        <div class="flex items-center gap-2">
+          <button id="newChatBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"> + </button>
+          <button id="trainBtn" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg">🔄</button>
+        </div>
+      </header>
+
+      <!-- Chat Section -->
+      <section id="chatSection" class="flex flex-col flex-1 bg-[#1e293b] rounded-2xl p-5 overflow-y-auto scrollbar-hide">
+        <div id="messages" class="flex flex-col space-y-3">
+          <div class="chat-bubble bot">
+            👋 Hi! I'm your Fake News Detector. You can type or speak a news headline, URL, or text to verify it. 🎤
+          </div>
+        </div>
+      </section>
+
+      <!-- Analytics Section -->
+      <section id="analyticsSection" class="hidden flex flex-col flex-1 bg-[#1e293b] rounded-2xl p-6">
+        <h3 class="text-xl font-semibold mb-4">📊 Real-Time Analytics</h3>
+        <div class="grid grid-cols-3 gap-6 mb-6">
+          <div class="bg-[#0f172a] p-4 rounded-xl text-center">
+            <h4 class="text-lg font-bold text-blue-400">Total News</h4>
+            <p id="analyticTotal" class="text-2xl mt-2">0</p>
+          </div>
+          <div class="bg-[#0f172a] p-4 rounded-xl text-center">
+            <h4 class="text-lg font-bold text-green-400">Real Detected</h4>
+            <p id="analyticReal" class="text-2xl mt-2">0</p>
+          </div>
+          <div class="bg-[#0f172a] p-4 rounded-xl text-center">
+            <h4 class="text-lg font-bold text-red-400">Fake Detected</h4>
+            <p id="analyticFake" class="text-2xl mt-2">0</p>
+          </div>
+        </div>
+        <div class="bg-[#0f172a] p-4 rounded-xl">
+          <h4 class="text-lg font-bold mb-3 text-yellow-400">🔮 Fake News Probability (Trend)</h4>
+          <canvas id="fakeNewsChart" height="150"></canvas>
+        </div>
+      </section>
+      <!-- Profile Section INSIDE APPSHELL -->
+<section id="appProfileSection" class="hidden flex flex-col flex-1 bg-[#1e293b] rounded-2xl p-6 space-y-4">
+
+  <h2 class="text-2xl font-semibold mb-2">Your Profile</h2>
+
+  <!-- Profile photo -->
+  <div class="flex flex-col items-center space-y-3">
+    <div class="relative group">
+      <img id="appProfileImage" src="" 
+           class="w-24 h-24 rounded-full object-cover border-2 border-gray-500" />
+
+      <div class="absolute bottom-0 right-0 bg-blue-600 rounded-full p-1">
+        <span class="text-xs font-bold">+</span>
+      </div>
+
+      <button id="appAddPhotoBtn"
+              class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+        </svg>
+      </button>
+      <input type="file" id="appProfileImageInput" accept="image/*" class="hidden" />
+    </div>
+  </div>
+
+  <!-- Info fields -->
+  <div class="space-y-4">
     <div>
-      <h2 class="text-lg font-semibold mb-3 border-b border-gray-600 pb-1">🕓 Chat History</h2>
-      <ul id="historyList" class="text-sm text-gray-300 space-y-2 max-h-60 overflow-y-auto scrollbar-hide"></ul>
+      <label class="block text-sm mb-1">Full Name</label>
+      <input id="appProfileName" class="w-full bg-[#0f172a] border border-gray-600 rounded-lg p-2" />
     </div>
-  </aside>
 
-  <!-- Script -->
+    <div>
+      <label class="block text-sm mb-1">Email</label>
+      <input id="appProfileEmail" class="w-full bg-[#0f172a] border border-gray-600 rounded-lg p-2" />
+    </div>
+
+    <div>
+      <label class="block text-sm mb-1">Phone</label>
+      <input id="appProfilePhone" class="w-full bg-[#0f172a] border border-gray-600 rounded-lg p-2" />
+    </div>
+
+    <div>
+      <label class="block text-sm mb-1">Occupation</label>
+      <input id="appProfileOccupation" class="w-full bg-[#0f172a] border border-gray-600 rounded-lg p-2" />
+    </div>
+  </div>
+
+  <button id="appSaveProfileBtn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg w-fit">
+    Save Changes
+  </button>
+
+</section>
+
+
+      <!-- Input Area -->
+      <div id="chatInputSection" class="flex space-x-2 items-center">
+        <button id="voiceBtn" aria-label="Start voice input" class="bg-gray-700 hover:bg-blue-600 text-white p-2 rounded-xl flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1v11"></path>
+            <path d="M19 11a7 7 0 0 1-14 0"></path>
+            <line x1="12" y1="23" x2="12" y2="17"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
+          </svg>
+        </button>
+
+        <input
+          id="userInput"
+          type="text"
+          placeholder="Type your message or paste a URL..."
+          class="flex-1 bg-[#1e293b] text-gray-200 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+        <button id="sendBtn" aria-label="Send message"
+                class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-xl flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+    </main>
+
+    <!-- Right Panel -->
+    <aside class="w-96 bg-[#1e293b] p-5 flex flex-col space-y-6">
+      <div>
+        <h2 class="text-lg font-semibold mb-3 border-b border-gray-600 pb-1">🎓 Educational Insights</h2>
+        <ul id="eduList" class="list-disc text-sm ml-4 space-y-2 text-gray-300">
+          <li>Be skeptical of sensationalist headlines.</li>
+          <li>Cross-check news from multiple credible sites.</li>
+          <li>Fake news often uses emotional, simple language.</li>
+          <li>Look for the author and source credibility.</li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="text-lg font-semibold mb-3 border-b border-gray-600 pb-1">🕓 Chat History</h2>
+        <ul id="historyList" class="text-sm text-gray-300 space-y-2 max-h-60 overflow-y-auto scrollbar-hide"></ul>
+      </div>
+    </aside>
+  </div>
+
+  <!-- SCRIPT -->
   <script>
+/* ============================================================
+   AUTHENTICATION + PROFILE MANAGEMENT (UPDATED FOR BACKEND API)
+   ============================================================ */
+
+const loginSection = document.getElementById("loginSection");
+const signupSection = document.getElementById("signupSection");
+const profileSection = document.getElementById("profileSection");
+const appShell = document.getElementById("appShell");
+
+// Forms + Fields
+const loginForm = document.getElementById("loginForm");
+const loginIdentifier = document.getElementById("loginIdentifier");
+const loginPassword = document.getElementById("loginPassword");
+const loginError = document.getElementById("loginError");
+const goToSignup = document.getElementById("goToSignup");
+
+const signupForm = document.getElementById("signupForm");
+const signupName = document.getElementById("signupName");
+const signupEmail = document.getElementById("signupEmail");
+const signupPhone = document.getElementById("signupPhone");
+const signupPassword = document.getElementById("signupPassword");
+const signupOccupation = document.getElementById("signupOccupation");
+const signupError = document.getElementById("signupError");
+const goToLogin = document.getElementById("goToLogin");
+
+// Profile fields
+const profileName = document.getElementById("profileName");
+const profileEmail = document.getElementById("profileEmail");
+const profilePhone = document.getElementById("profilePhone");
+const profileOccupation = document.getElementById("profileOccupation");
+const editProfileBtn = document.getElementById("editProfileBtn");
+const saveProfileBtn = document.getElementById("saveProfileBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const goToAppBtn = document.getElementById("goToAppBtn");
+
+// Profile photo
+const profileImage = document.getElementById("profileImage");
+const profileImageInput = document.getElementById("profileImageInput");
+const addPhotoBtn = document.getElementById("addPhotoBtn");
+
+let currentUser = null;
+
+// ---------- Section switching ----------
+function showSection(section) {
+    loginSection.classList.add("hidden");
+    signupSection.classList.add("hidden");
+    profileSection.classList.add("hidden");
+    appShell.classList.add("hidden");
+    section.classList.remove("hidden");
+}
+
+// ---------- Password Validation ----------
+function isStrongPassword(pw) {
+    return (
+        pw.length >= 8 &&
+        /[A-Z]/.test(pw) &&
+        /[0-9]/.test(pw) &&
+        /[!@#$%^&*(),.?":{}|<>_\-]/.test(pw)
+    );
+}
+
+/* ============================================================
+   GOOGLE LOGIN (OAuth)
+   ============================================================ */
+googleLogin.onclick = () => {
+    fetch("http://localhost:5000/api/google/login", {
+        method: "GET",
+        credentials: "include"
+    })
+        .then(res => res.json())
+        .then(data => {
+            window.location.href = data.url;
+        })
+        .catch(() => alert("Google login failed."));
+};
+
+function checkGoogleCallback() {
+    const hash = window.location.hash;
+
+    if (hash.includes("id_token")) {
+        const idToken = hash.split("id_token=")[1].split("&")[0];
+
+        fetch(`http://localhost:5000/api/google/callback?id_token=${idToken}`, {
+            method: "GET",
+            credentials: "include"
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) autoLogin();
+                else alert("Google login failed!");
+            });
+
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+}
+
+checkGoogleCallback();
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+function loginToBackend(identifier, password) {
+    fetch("http://localhost:5000/api/login", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, password })
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                currentUser = data.user;
+                loadProfile();
+                showSection(profileSection);
+            } else {
+                loginError.textContent = data.message;
+            }
+        })
+        .catch(() => {
+            loginError.textContent = "Unable to connect to backend.";
+        });
+}
+
+loginForm.addEventListener("submit", e => {
+    e.preventDefault();
+    loginError.textContent = "";
+    loginToBackend(loginIdentifier.value.trim(), loginPassword.value.trim());
+});
+
+/* ============================================================
+   SIGNUP
+   ============================================================ */
+signupForm.addEventListener("submit", e => {
+    e.preventDefault();
+    signupError.textContent = "";
+
+    if (!isStrongPassword(signupPassword.value)) {
+        signupError.textContent = "Password is not strong enough.";
+        return;
+    }
+
+    const payload = {
+        name: signupName.value.trim(),
+        email: signupEmail.value.trim(),
+        phone: signupPhone.value.trim(),
+        password: signupPassword.value.trim(),
+        occupation: signupOccupation.value.trim(),
+        profileImage: ""
+    };
+
+    fetch("http://localhost:5000/api/signup", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) signupError.textContent = data.message;
+            else showSection(loginSection);
+        })
+        .catch(() => {
+            signupError.textContent = "Unable to connect to backend.";
+        });
+});
+
+/* ============================================================
+   AUTO LOGIN (with backend protection)
+   ============================================================ */
+function autoLogin() {
+    fetch("http://localhost:5000/api/me", {
+        method: "GET",
+        credentials: "include"
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.loggedIn) {
+                currentUser = data.user;
+                loadProfile();
+                showSection(profileSection);
+            } else {
+                showSection(loginSection);
+            }
+        })
+        .catch(() => {
+            console.warn("Backend offline — skipping autoLogin()");
+            showSection(loginSection);
+        });
+}
+
+window.onload = autoLogin;
+
+/* ============================================================
+   PROFILE LOADING
+   ============================================================ */
+function loadProfile() {
+    profileName.value = currentUser.name;
+    profileEmail.value = currentUser.email;
+    profilePhone.value = currentUser.phone;
+    profileOccupation.value = currentUser.occupation;
+
+    if (currentUser.profileImage) {
+        profileImage.src = currentUser.profileImage;
+    }
+
+    setProfileEditable(false);
+}
+
+function setProfileEditable(editable) {
+    profileName.disabled = !editable;
+    profileEmail.disabled = !editable;
+    profilePhone.disabled = !editable;
+    profileOccupation.disabled = !editable;
+
+    editProfileBtn.classList.toggle("hidden", editable);
+    saveProfileBtn.classList.toggle("hidden", !editable);
+}
+
+editProfileBtn.onclick = () => setProfileEditable(true);
+
+/* ============================================================
+   SAVE PROFILE
+   ============================================================ */
+saveProfileBtn.onclick = () => {
+    const payload = {
+        name: profileName.value.trim(),
+        email: profileEmail.value.trim(),
+        phone: profilePhone.value.trim(),
+        occupation: profileOccupation.value.trim(),
+        profileImage: currentUser.profileImage || ""
+    };
+
+    fetch("http://localhost:5000/api/update-profile", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                currentUser = data.user;
+                loadProfile();
+            }
+        })
+        .catch(() => alert("Could not update profile."));
+};
+
+/* ============================================================
+   UPLOAD PROFILE IMAGE
+   ============================================================ */
+addPhotoBtn.onclick = () => profileImageInput.click();
+
+profileImageInput.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    fetch("http://localhost:5000/api/upload-profile-image", {
+        method: "POST",
+        credentials: "include",
+        body: formData
+    })
+        .then(res => res.json())
+        .then(data => {
+            currentUser.profileImage = "data:image/png;base64," + data.base64;
+            profileImage.src = currentUser.profileImage;
+            saveProfileBtn.click();
+        });
+};
+
+/* ============================================================
+   LOGOUT
+   ============================================================ */
+logoutBtn.onclick = () => {
+    fetch("http://localhost:5000/api/logout", {
+        method: "POST",
+        credentials: "include"
+    }).finally(() => {
+        currentUser = null;
+        showSection(loginSection);
+    });
+};
+
+
+goToAppBtn.onclick = () => showSection(appShell);
+
+// ---------- Start App ----------
+window.onload = autoLogin;
+
+
+    // =========================
+    // EXISTING CHATBOT LOGIC
+    // =========================
     const userInput = document.getElementById("userInput");
     const sendBtn = document.getElementById("sendBtn");
     const messages = document.getElementById("messages");
@@ -104,46 +745,32 @@
     const realEl = document.getElementById("analyticReal");
     const chatSection = document.getElementById("chatSection");
     const analyticsSection = document.getElementById("analyticsSection");
-    const chatInputSection = document.getElementById("chatInputSection");
     const chatTab = document.getElementById("chatTab");
     const analyticsTab = document.getElementById("analyticsTab");
-    const educationTab = document.getElementById("educationTab");
-    const historyTab = document.getElementById("historyTab");
+    const chatInputSection = document.getElementById("chatInputSection");
     const voiceBtn = document.getElementById("voiceBtn");
-    const eduList = document.getElementById("eduList");
     const historyList = document.getElementById("historyList");
-    const newChatBtn = document.getElementById("newChatBtn");
+    const profileTab = document.getElementById("profileTab");
+const appProfileSection = document.getElementById("appProfileSection");
+
 
     let total = 0, fake = 0, real = 0;
     let fakeTrend = [];
-    let educationTopics = [];
-    let chatHistory = [];
     let chart;
     let recognition;
 
-    // Persistent analytics
-    function loadAnalytics() {
-      const data = JSON.parse(localStorage.getItem("analytics"));
-      if (data) {
-        total = data.total;
-        fake = data.fake;
-        real = data.real;
-        fakeTrend = data.fakeTrend;
-        updateAnalytics();
-      }
-    }
-    function saveAnalytics() {
-      localStorage.setItem("analytics", JSON.stringify({ total, fake, real, fakeTrend }));
-    }
-
-    // Voice input
-    if ("webkitSpeechRecognition" in window) {
+    // Voice Recognition
+    if ('webkitSpeechRecognition' in window) {
       recognition = new webkitSpeechRecognition();
       recognition.lang = "en-US";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
       recognition.onstart = () => voiceBtn.classList.add("pulse");
       recognition.onend = () => voiceBtn.classList.remove("pulse");
-      recognition.onresult = (e) => {
-        userInput.value = e.results[0][0].transcript;
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        userInput.value = transcript;
         handleSend();
       };
     } else {
@@ -155,160 +782,226 @@
 
     // Chart rendering
     function renderChart() {
-      const ctx = document.getElementById("fakeNewsChart").getContext("2d");
+      const ctx = document.getElementById('fakeNewsChart').getContext('2d');
       if (chart) chart.destroy();
       chart = new Chart(ctx, {
-        type: "line",
+        type: 'line',
         data: {
           labels: fakeTrend.map((_, i) => `Check ${i + 1}`),
           datasets: [{
-            label: "Fake News Probability (%)",
+            label: 'Fake News Probability (%)',
             data: fakeTrend,
-            borderColor: "#f87171",
+            borderColor: '#f87171',
             tension: 0.4,
-            fill: false,
-          }],
+            fill: false
+          }]
         },
         options: {
-          animation: { duration: 800, easing: "easeInOutCubic" },
           scales: {
-            x: { grid: { display: false }, ticks: { color: "#cbd5e1" } },
-            y: { grid: { display: false }, ticks: { color: "#cbd5e1" } },
+            x: { grid: { display: false }, ticks: { color: '#cbd5e1' } },
+            y: { grid: { display: false }, ticks: { color: '#cbd5e1' } }
           },
-          plugins: { legend: { labels: { color: "#e2e8f0" } } },
-        },
+          plugins: { legend: { labels: { color: '#e2e8f0' } } }
+        }
       });
     }
 
-    // Tabs
+    // Events
+    sendBtn.addEventListener("click", handleSend);
+    userInput.addEventListener("keypress", (e) => e.key === "Enter" && handleSend());
+
     analyticsTab.addEventListener("click", () => {
       chatSection.classList.add("hidden");
-      analyticsSection.classList.remove("hidden");
       chatInputSection.classList.add("hidden");
+      analyticsSection.classList.remove("hidden");
       renderChart();
     });
+
     chatTab.addEventListener("click", () => {
       chatSection.classList.remove("hidden");
-      analyticsSection.classList.add("hidden");
       chatInputSection.classList.remove("hidden");
-      eduList.parentElement.classList.remove("hidden");
+      analyticsSection.classList.add("hidden");
     });
-    educationTab.addEventListener("click", () => renderEducation());
-    historyTab.addEventListener("click", () => renderHistory());
 
-    // Message handling
-    function appendMessage(msg, sender) {
+
+   
+
+
+    function appendMessage(msg, sender, inputText = "", aiLabel = "") {
       const div = document.createElement("div");
       div.classList.add("chat-bubble", sender);
       div.textContent = msg;
+
+      if (sender === "bot" && aiLabel) {
+        const fb = document.createElement("div");
+        fb.classList.add("flex", "space-x-3", "mt-1");
+
+        const correctBtn = document.createElement("button");
+        correctBtn.textContent = "👍 Correct";
+        correctBtn.classList.add("bg-green-700", "px-2", "py-1", "rounded");
+        correctBtn.onclick = () => sendFeedback(inputText, aiLabel, aiLabel);
+
+        const wrongBtn = document.createElement("button");
+        wrongBtn.textContent = "👎 Wrong";
+        wrongBtn.classList.add("bg-red-700", "px-2", "py-1", "rounded");
+        wrongBtn.onclick = () =>
+          sendFeedback(inputText, aiLabel, aiLabel === "FAKE" ? "REAL" : "FAKE");
+
+        fb.appendChild(correctBtn);
+        fb.appendChild(wrongBtn);
+        div.appendChild(document.createElement("br"));
+        div.appendChild(fb);
+      }
+
       messages.appendChild(div);
       messages.scrollTop = messages.scrollHeight;
-      if (sender === "bot") {
-        const utter = new SpeechSynthesisUtterance(msg);
-        utter.voice = speechSynthesis.getVoices()[0];
-        speechSynthesis.speak(utter);
-      }
     }
 
-    sendBtn.addEventListener("click", handleSend);
-    userInput.addEventListener("keypress", (e) => e.key === "Enter" && handleSend());
-    newChatBtn.addEventListener("click", () => { messages.innerHTML = ""; appendMessage("👋 New chat started. Type or speak to begin!", "bot"); });
+    function addToHistory(text, result) {
+      const li = document.createElement("li");
+      li.textContent = `${result} → ${text.slice(0, 60)}${text.length > 60 ? "..." : ""}`;
+      historyList.prepend(li);
+    }
 
+    // MAIN: Send to Python backend
     function handleSend() {
-      const text = userInput.value.trim();
-      if (!text) return;
-      appendMessage(text, "user");
+      const newsInput = userInput.value.trim();
+      if (newsInput === "") return;
+
+      appendMessage(newsInput, "user");
       userInput.value = "";
-      simulateAIResponse(text);
-    }
 
-    // AI Simulation
-    function simulateAIResponse(input) {
-      appendMessage("🔍 Analyzing your input...", "bot");
-      setTimeout(() => {
-        messages.lastChild.remove();
-        const random = Math.random();
-        const isFake = random < 0.5;
-        let result = isFake ? "⚠️ This news appears *Fake*." : "✅ This news appears *Real*.";
-        let explanation = isFake
-          ? "It shows emotional and biased language patterns, lacks credible sources."
-          : "It aligns with reputable sources and has balanced writing.";
-        total++;
-        isFake ? fake++ : real++;
-        fakeTrend.push(Math.floor((fake / total) * 100));
-        updateAnalytics();
-        saveAnalytics();
+      const loadingMsg = document.createElement("div");
+      loadingMsg.classList.add("chat-bubble", "bot");
+      loadingMsg.textContent = "🔍 Analyzing your input...";
+      messages.appendChild(loadingMsg);
+      messages.scrollTop = messages.scrollHeight;
 
-        educationTopics.push({
-          query: input,
-          time: new Date().toLocaleTimeString(),
-          isFake,
-          links: [
-            `https://www.google.com/search?q=${encodeURIComponent(input)}+news`,
-            `https://www.bbc.com/search?q=${encodeURIComponent(input)}`,
-            `https://www.reuters.com/site-search/?query=${encodeURIComponent(input)}`,
-          ],
+      fetch("http://localhost:5000/api/detect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: newsInput }),
+      })
+        .then(response => response.json())
+        .then(data => {
+          messages.removeChild(loadingMsg);
+
+          const resultMsg = `AI Result: ${data.prediction} (Confidence: ${data.confidence}%)`;
+          appendMessage(resultMsg, "bot");
+
+          if (data.isFake) {
+            appendMessage("🧩 It shows signs of sensational or emotional language, which is common in fake news.", "bot");
+          } else {
+            appendMessage("📚 It looks more neutral and closer to reliable news style.", "bot");
+          }
+
+          updateAnalytics(data.isFake, data.confidence);
+          addToHistory(newsInput, data.prediction);
+        })
+        .catch(error => {
+          console.error("Error:", error);
+          messages.removeChild(loadingMsg);
+          appendMessage(
+            "⚠️ Sorry, an error occurred while detecting the news. Make sure the Python backend is running on port 5000.",
+            "bot"
+          );
         });
-
-        chatHistory.push(input);
-        updateHistoryList();
-        appendMessage(result, "bot");
-        appendMessage("🧠 Explanation: " + explanation, "bot");
-      }, 1200);
     }
 
-    function updateAnalytics() {
+    function updateAnalytics(isFake, confidence) {
+      total++;
       totalEl.textContent = total;
-      fakeEl.textContent = fake;
-      realEl.textContent = real;
+
+      if (isFake) {
+        fake++;
+        fakeEl.textContent = fake;
+      } else {
+        real++;
+        realEl.textContent = real;
+      }
+
+      fakeTrend.push(confidence);
       renderChart();
     }
 
-    // Education Tab
-    function renderEducation() {
-      eduList.innerHTML = "";
-      if (educationTopics.length === 0) {
-        eduList.innerHTML = "<li>No educational insights yet. Try searching some news!</li>";
-        return;
+    function sendFeedback(text, predicted, correct) {
+      fetch("http://localhost:5000/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, predicted, correct })
+      });
+
+      appendMessage("🙏 Thank you! Your feedback helps me learn.", "bot");
+    }
+
+    document.getElementById("trainBtn").addEventListener("click", () => {
+      appendMessage("⏳ Training started...", "bot");
+
+      fetch("http://localhost:5000/api/train", { method: "POST" })
+        .then(() => {
+          appendMessage("🎉 Training triggered! Model will update soon.", "bot");
+        });
+    });
+
+     profileTab.addEventListener("click", () => {
+  chatSection.classList.add("hidden");
+  analyticsSection.classList.add("hidden");
+  chatInputSection.classList.add("hidden");
+  appProfileSection.classList.remove("hidden");
+
+  // Load profile values into the app version
+  appProfileName.value = currentUser.name;
+  appProfileEmail.value = currentUser.email;
+  appProfilePhone.value = currentUser.phone;
+  appProfileOccupation.value = currentUser.occupation;
+  appProfileImage.src = currentUser.profileImage || "";
+});
+
+
+appAddPhotoBtn.onclick = () => appProfileImageInput.click();
+
+appProfileImageInput.onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  fetch("http://localhost:5000/api/upload-profile-image", {
+      method: "POST",
+      credentials: "include",
+      body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+      currentUser.profileImage = "data:image/png;base64," + data.base64;
+      appProfileImage.src = currentUser.profileImage;
+  });
+};
+
+appSaveProfileBtn.onclick = () => {
+  const payload = {
+    name: appProfileName.value.trim(),
+    email: appProfileEmail.value.trim(),
+    phone: appProfilePhone.value.trim(),
+    occupation: appProfileOccupation.value.trim(),
+    profileImage: currentUser.profileImage || ""
+  };
+
+  fetch("http://localhost:5000/api/update-profile", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(data => {
+      if (data.success) {
+          currentUser = data.user;
+          alert("Profile updated!");
       }
-      educationTopics.forEach((item) => {
-        const li = document.createElement("li");
-        li.className = "p-3 bg-[#0f172a] rounded-lg hover:bg-blue-900 transition";
-        li.innerHTML = `
-          <strong class="text-blue-400">${item.query}</strong>
-          <p class="text-xs text-gray-400">Checked at ${item.time} — ${
-          item.isFake ? "⚠️ Fake" : "✅ Real"
-        }</p>
-          <div class="mt-2 space-y-1">
-            ${item.links
-              .map(
-                (l) =>
-                  `<a href="${l}" target="_blank" class="text-sm text-yellow-400 hover:underline">${l}</a>`
-              )
-              .join("<br>")}
-          </div>`;
-        eduList.appendChild(li);
-      });
-    }
-
-    // History
-    function updateHistoryList() {
-      historyList.innerHTML = "";
-      chatHistory.forEach((h, i) => {
-        const li = document.createElement("li");
-        li.textContent = h;
-        li.className = "cursor-pointer hover:text-blue-400";
-        li.onclick = () => appendMessage(`🔁 Rechecking: ${h}`, "bot");
-        historyList.appendChild(li);
-      });
-    }
-    function renderHistory() {
-      chatSection.classList.add("hidden");
-      analyticsSection.classList.add("hidden");
-      chatInputSection.classList.add("hidden");
-    }
-
-    window.onload = loadAnalytics;
+  });
+};
   </script>
 </body>
 </html>
