@@ -328,8 +328,13 @@
           </div>
         </div>
         <div class="bg-[#0f172a] p-4 rounded-xl">
-          <h4 class="text-lg font-bold mb-3 text-yellow-400">🔮 Fake News Probability (Trend)</h4>
-          <canvas id="fakeNewsChart" height="150"></canvas>
+          <h4 class="text-lg font-bold mb-3 text-yellow-400"> Fake News Probability (Trend)</h4>
+          <div class="overflow-x-auto">
+  <div style="width: 1200px;">
+    <canvas id="fakeNewsChart" height="150"></canvas>
+  </div>
+</div>
+
         </div>
       </section>
       <!-- Profile Section INSIDE APPSHELL -->
@@ -782,29 +787,43 @@ const appProfileSection = document.getElementById("appProfileSection");
 
     // Chart rendering
     function renderChart() {
-      const ctx = document.getElementById('fakeNewsChart').getContext('2d');
-      if (chart) chart.destroy();
-      chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: fakeTrend.map((_, i) => `Check ${i + 1}`),
-          datasets: [{
-            label: 'Fake News Probability (%)',
-            data: fakeTrend,
-            borderColor: '#f87171',
-            tension: 0.4,
-            fill: false
-          }]
+  const ctx = document.getElementById('fakeNewsChart').getContext('2d');
+
+  if (!chart) {
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Fake News Probability (%)',
+          data: [],
+          borderColor: '#f87171',
+          tension: 0.4,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: {
+          duration: 700,   // ✅ smooth motion
+          easing: "easeOutQuart"
         },
-        options: {
-          scales: {
-            x: { grid: { display: false }, ticks: { color: '#cbd5e1' } },
-            y: { grid: { display: false }, ticks: { color: '#cbd5e1' } }
-          },
-          plugins: { legend: { labels: { color: '#e2e8f0' } } }
+        scales: {
+          x: { ticks: { color: '#cbd5e1' } },
+          y: {
+            min: 0,
+            max: 100,
+            ticks: { color: '#cbd5e1' }
+          }
+        },
+        plugins: {
+          legend: { labels: { color: '#e2e8f0' } }
         }
-      });
-    }
+      }
+    });
+  }
+}
+
 
     // Events
     sendBtn.addEventListener("click", handleSend);
@@ -814,6 +833,7 @@ const appProfileSection = document.getElementById("appProfileSection");
       chatSection.classList.add("hidden");
       chatInputSection.classList.add("hidden");
       analyticsSection.classList.remove("hidden");
+      appProfileSection.classList.add("hidden");
       renderChart();
     });
 
@@ -821,6 +841,7 @@ const appProfileSection = document.getElementById("appProfileSection");
       chatSection.classList.remove("hidden");
       chatInputSection.classList.remove("hidden");
       analyticsSection.classList.add("hidden");
+      appProfileSection.classList.add("hidden");
     });
 
 
@@ -908,21 +929,30 @@ const appProfileSection = document.getElementById("appProfileSection");
         });
     }
 
-    function updateAnalytics(isFake, confidence) {
-      total++;
-      totalEl.textContent = total;
+   function updateAnalytics(isFake, confidence) {
+  total++;
+  totalEl.textContent = total;
 
-      if (isFake) {
-        fake++;
-        fakeEl.textContent = fake;
-      } else {
-        real++;
-        realEl.textContent = real;
-      }
+  if (isFake) {
+    fake++;
+    fakeEl.textContent = fake;
+  } else {
+    real++;
+    realEl.textContent = real;
+  }
 
-      fakeTrend.push(confidence);
-      renderChart();
-    }
+  chart.data.labels.push("Check " + total);
+  chart.data.datasets[0].data.push(confidence);
+
+  const MAX_VISIBLE_POINTS = 100; // ✅ scroll window size
+
+  if (chart.data.labels.length > MAX_VISIBLE_POINTS) {
+    chart.data.labels.shift();          // remove old label
+    chart.data.datasets[0].data.shift(); // remove old value
+  }
+
+  chart.update(); // ✅ smooth scrolling animation
+}
 
     function sendFeedback(text, predicted, correct) {
       fetch("http://localhost:5000/api/feedback", {
