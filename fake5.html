@@ -286,7 +286,6 @@
       <nav class="flex flex-col space-y-4">
         <button id="chatTab" class="text-left text-gray-300 hover:text-blue-400">Chat</button>
         <button id="analyticsTab" class="text-left text-gray-300 hover:text-blue-400">Analytics</button>
-        <button id="educationTab" class="text-left text-gray-300 hover:text-blue-400">Education</button>
         <button id="profileTab" class="text-left text-gray-300 hover:text-blue-400"> Profile</button>
       </nav>
     </aside>
@@ -311,32 +310,51 @@
       </section>
 
       <!-- Analytics Section -->
-      <section id="analyticsSection" class="hidden flex flex-col flex-1 bg-[#1e293b] rounded-2xl p-6">
-        <h3 class="text-xl font-semibold mb-4">📊 Real-Time Analytics</h3>
-        <div class="grid grid-cols-3 gap-6 mb-6">
-          <div class="bg-[#0f172a] p-4 rounded-xl text-center">
-            <h4 class="text-lg font-bold text-blue-400">Total News</h4>
-            <p id="analyticTotal" class="text-2xl mt-2">0</p>
-          </div>
-          <div class="bg-[#0f172a] p-4 rounded-xl text-center">
-            <h4 class="text-lg font-bold text-green-400">Real Detected</h4>
-            <p id="analyticReal" class="text-2xl mt-2">0</p>
-          </div>
-          <div class="bg-[#0f172a] p-4 rounded-xl text-center">
-            <h4 class="text-lg font-bold text-red-400">Fake Detected</h4>
-            <p id="analyticFake" class="text-2xl mt-2">0</p>
-          </div>
-        </div>
-        <div class="bg-[#0f172a] p-4 rounded-xl">
-          <h4 class="text-lg font-bold mb-3 text-yellow-400"> Fake News Probability (Trend)</h4>
-          <div class="overflow-x-auto">
-  <div style="width: 1200px;">
-    <canvas id="fakeNewsChart" height="150"></canvas>
+      <section id="analyticsSection"
+  class="hidden flex flex-col flex-1 bg-[#1e293b] rounded-2xl p-6 overflow-y-auto">
+
+
+  <!-- BIG ANALYTICS CARD -->
+  <div class="flex flex-col flex-1 bg-[#1e293b] rounded-3xl p-6 shadow-xl">
+
+    <!-- TITLE -->
+    <h3 class="text-xl font-semibold mb-6 flex items-center gap-2">
+      📊 <span>Real-Time Analytics</span>
+    </h3>
+
+    <!-- STATS -->
+    <div class="grid grid-cols-3 gap-6 mb-6">
+      <div class="bg-[#0f172a] p-4 rounded-2xl text-center shadow-md">
+        <h4 class="text-lg font-bold text-blue-400">Total News</h4>
+        <p id="analyticTotal" class="text-2xl mt-2">0</p>
+      </div>
+
+      <div class="bg-[#0f172a] p-4 rounded-2xl text-center shadow-md">
+        <h4 class="text-lg font-bold text-green-400">Real Detected</h4>
+        <p id="analyticReal" class="text-2xl mt-2">0</p>
+      </div>
+
+      <div class="bg-[#0f172a] p-4 rounded-2xl text-center shadow-md">
+        <h4 class="text-lg font-bold text-red-400">Fake Detected</h4>
+        <p id="analyticFake" class="text-2xl mt-2">0</p>
+      </div>
+    </div>
+
+    <!-- CHART CARD -->
+    <div class="bg-[#0f172a] p-4 rounded-2xl flex-1">
+  <h4 class="text-lg font-bold mb-1 text-yellow-400">
+    📈 Fake News Probability (Trend)
+  </h4>
+
+  <!-- FORCE HEIGHT HERE -->
+  <div style="height: 280px;">
+    <canvas id="fakeNewsChart"></canvas>
   </div>
 </div>
 
-        </div>
-      </section>
+  </div>
+</section>
+
       <!-- Profile Section INSIDE APPSHELL -->
 <section id="appProfileSection" class="hidden flex flex-col flex-1 bg-[#1e293b] rounded-2xl p-6 space-y-4">
 
@@ -485,6 +503,19 @@ const goToAppBtn = document.getElementById("goToAppBtn");
 const profileImage = document.getElementById("profileImage");
 const profileImageInput = document.getElementById("profileImageInput");
 const addPhotoBtn = document.getElementById("addPhotoBtn");
+// Google login button
+const googleLogin = document.getElementById("googleLogin");
+
+// App profile fields
+const appProfileName = document.getElementById("appProfileName");
+const appProfileEmail = document.getElementById("appProfileEmail");
+const appProfilePhone = document.getElementById("appProfilePhone");
+const appProfileOccupation = document.getElementById("appProfileOccupation");
+const appProfileImage = document.getElementById("appProfileImage");
+const appAddPhotoBtn = document.getElementById("appAddPhotoBtn");
+const appProfileImageInput = document.getElementById("appProfileImageInput");
+const appSaveProfileBtn = document.getElementById("appSaveProfileBtn");
+
 
 let currentUser = null;
 
@@ -525,7 +556,7 @@ googleLogin.onclick = () => {
 function checkGoogleCallback() {
     const hash = window.location.hash;
 
-    if (hash.includes("id_token")) {
+    if (hash && hash.includes("id_token")) {
         const idToken = hash.split("id_token=")[1].split("&")[0];
 
         fetch(`http://localhost:5000/api/google/callback?id_token=${idToken}`, {
@@ -615,28 +646,48 @@ signupForm.addEventListener("submit", e => {
 /* ============================================================
    AUTO LOGIN (with backend protection)
    ============================================================ */
+document.addEventListener("DOMContentLoaded", () => {
+  autoLogin();
+});
+
 function autoLogin() {
-    fetch("http://localhost:5000/api/me", {
-        method: "GET",
-        credentials: "include"
+  fetch("http://localhost:5000/api/me", {
+    method: "GET",
+    credentials: "include"   // 🔴 MUST BE PRESENT
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.loggedIn) {
+        currentUser = data.user;
+
+        // Go directly to app
+        showSection(appShell);
+
+        // Optional: open Chat tab by default
+        chatTab.click();
+      } else {
+        showSection(loginSection);
+      }
     })
-        .then(res => res.json())
-        .then(data => {
-            if (data.loggedIn) {
-                currentUser = data.user;
-                loadProfile();
-                showSection(profileSection);
-            } else {
-                showSection(loginSection);
-            }
-        })
-        .catch(() => {
-            console.warn("Backend offline — skipping autoLogin()");
-            showSection(loginSection);
-        });
+    .catch(() => {
+      showSection(loginSection);
+    });
 }
 
-window.onload = autoLogin;
+
+// Go to Signup page
+goToSignup.addEventListener("click", (e) => {
+  e.preventDefault();   // 🔴 IMPORTANT
+  loginSection.classList.add("hidden");
+  signupSection.classList.remove("hidden");
+});
+
+// Go back to Login page
+goToLogin.addEventListener("click", (e) => {
+  e.preventDefault();   // 🔴 IMPORTANT
+  signupSection.classList.add("hidden");
+  loginSection.classList.remove("hidden");
+});
 
 /* ============================================================
    PROFILE LOADING
@@ -723,14 +774,15 @@ profileImageInput.onchange = e => {
    LOGOUT
    ============================================================ */
 logoutBtn.onclick = () => {
-    fetch("http://localhost:5000/api/logout", {
-        method: "POST",
-        credentials: "include"
-    }).finally(() => {
-        currentUser = null;
-        showSection(loginSection);
-    });
+  fetch("http://localhost:5000/api/logout", {
+    method: "POST",
+    credentials: "include"
+  }).finally(() => {
+    currentUser = null;
+    showSection(loginSection);
+  });
 };
+
 
 
 goToAppBtn.onclick = () => showSection(appShell);
@@ -761,8 +813,9 @@ const appProfileSection = document.getElementById("appProfileSection");
 
     let total = 0, fake = 0, real = 0;
     let fakeTrend = [];
-    let chart;
     let recognition;
+let chart = null;
+let totalChecks = 0;
 
     // Voice Recognition
     if ('webkitSpeechRecognition' in window) {
@@ -786,63 +839,97 @@ const appProfileSection = document.getElementById("appProfileSection");
     voiceBtn.addEventListener("click", () => recognition && recognition.start());
 
     // Chart rendering
-    function renderChart() {
-  const ctx = document.getElementById('fakeNewsChart').getContext('2d');
 
-  if (!chart) {
-    chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: 'Fake News Probability (%)',
-          data: [],
-          borderColor: '#f87171',
-          tension: 0.4,
-          fill: false
-        }]
+function renderChart() {
+  const canvas = document.getElementById("fakeNewsChart");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "Fake News Probability (%)",
+        data: [],
+        borderColor: "#f87171",
+        backgroundColor: "transparent",
+        tension: 0.4,
+        pointRadius:4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {
+        duration: 700,
+        easing: "easeOutQuart"
       },
-      options: {
-        responsive: true,
-        animation: {
-          duration: 700,   // ✅ smooth motion
-          easing: "easeOutQuart"
+      scales: {
+        x: {
+          ticks: { color: "#cbd5e1" },
+          grid: { color: "rgba(255,255,255,0.05)" }
         },
-        scales: {
-          x: { ticks: { color: '#cbd5e1' } },
-          y: {
-            min: 0,
-            max: 100,
-            ticks: { color: '#cbd5e1' }
-          }
-        },
-        plugins: {
-          legend: { labels: { color: '#e2e8f0' } }
+        y: {
+          min: 0,
+          max: 100,
+          ticks: {
+            stepSize: 10,
+            color: "#cbd5e1"
+          },
+          grid: { color: "rgba(255,255,255,0.05)" }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: { color: "#e2e8f0" }
         }
       }
-    });
-  }
+    }
+  });
 }
+
 
 
     // Events
     sendBtn.addEventListener("click", handleSend);
-    userInput.addEventListener("keypress", (e) => e.key === "Enter" && handleSend());
+    userInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    handleSend();
+  }
+});
 
-    analyticsTab.addEventListener("click", () => {
-      chatSection.classList.add("hidden");
-      chatInputSection.classList.add("hidden");
-      analyticsSection.classList.remove("hidden");
-      appProfileSection.classList.add("hidden");
-      renderChart();
-    });
 
-    chatTab.addEventListener("click", () => {
-      chatSection.classList.remove("hidden");
-      chatInputSection.classList.remove("hidden");
-      analyticsSection.classList.add("hidden");
-      appProfileSection.classList.add("hidden");
-    });
+  analyticsTab.addEventListener("click", () => {
+  // Hide chat
+  chatSection.classList.add("hidden");
+  chatInputSection.classList.add("hidden");
+  appProfileSection.classList.add("hidden");
+
+  // Show analytics
+  analyticsSection.classList.remove("hidden");
+
+  // ⏳ IMPORTANT: wait for layout, then render chart
+  setTimeout(() => {
+    renderChart();
+  }, 100);
+});
+
+
+
+
+   chatTab.addEventListener("click", () => {
+  // Show chat
+  chatSection.classList.remove("hidden");
+  chatInputSection.classList.remove("hidden");
+
+  // Hide others
+  analyticsSection.classList.add("hidden");
+  appProfileSection.classList.add("hidden");
+});
 
 
    
@@ -907,8 +994,16 @@ const appProfileSection = document.getElementById("appProfileSection");
         .then(data => {
           messages.removeChild(loadingMsg);
 
-          const resultMsg = `AI Result: ${data.prediction} (Confidence: ${data.confidence}%)`;
-          appendMessage(resultMsg, "bot");
+         appendMessage(
+  `AI Result: ${data.prediction} (Confidence: ${data.confidence}%)`,
+  "bot"
+);
+
+if (chart) {
+  chart.data.labels.push("Check " + chart.data.labels.length);
+  chart.data.datasets[0].data.push(data.confidence);
+  chart.update();
+}
 
           if (data.isFake) {
             appendMessage("🧩 It shows signs of sensational or emotional language, which is common in fake news.", "bot");
@@ -930,6 +1025,7 @@ const appProfileSection = document.getElementById("appProfileSection");
     }
 
    function updateAnalytics(isFake, confidence) {
+    if (!chart) return;
   total++;
   totalEl.textContent = total;
 
@@ -979,7 +1075,6 @@ const appProfileSection = document.getElementById("appProfileSection");
   chatInputSection.classList.add("hidden");
   appProfileSection.classList.remove("hidden");
 
-  // Load profile values into the app version
   appProfileName.value = currentUser.name;
   appProfileEmail.value = currentUser.email;
   appProfilePhone.value = currentUser.phone;
