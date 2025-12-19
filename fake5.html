@@ -409,6 +409,20 @@
   <button id="appSaveProfileBtn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg w-fit">
     Save Changes
   </button>
+<div class="flex gap-4 mt-6">
+  <button
+    id="appSaveProfileBtn"
+    class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg">
+    Save Changes
+  </button>
+
+  <button
+    id="appLogoutBtn"
+    class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg">
+    Logout
+  </button>
+</div>
+
 
 </section>
 
@@ -769,6 +783,23 @@ profileImageInput.onchange = e => {
             saveProfileBtn.click();
         });
 };
+const appLogoutBtn = document.getElementById("appLogoutBtn");
+
+appLogoutBtn.addEventListener("click", () => {
+  fetch("http://localhost:5000/api/logout", {
+    method: "POST",
+    credentials: "include"
+  })
+  .finally(() => {
+    currentUser = null;
+
+    // Hide app
+    appShell.classList.add("hidden");
+
+    // Show login page
+    loginSection.classList.remove("hidden");
+  });
+});
 
 /* ============================================================
    LOGOUT
@@ -841,55 +872,55 @@ let totalChecks = 0;
     // Chart rendering
 
 function renderChart() {
+  // ✅ Guard: do NOT recreate if already exists
+  if (chart) return;
+
   const canvas = document.getElementById("fakeNewsChart");
-  if (!canvas) return;
+  if (!canvas) {
+    console.error("Canvas not found");
+    return;
+  }
 
   const ctx = canvas.getContext("2d");
-
 
   chart = new Chart(ctx, {
     type: "line",
     data: {
       labels: [],
-      datasets: [{
-        label: "Fake News Probability (%)",
-        data: [],
-        borderColor: "#f87171",
-        backgroundColor: "transparent",
-        tension: 0.4,
-        pointRadius:4
-      }]
+      datasets: [
+        {
+          label: "Fake News (Confidence %)",
+          data: [],
+          borderColor: "#ef4444", // red
+          borderWidth: 2,
+          tension: 0.4
+        },
+        {
+          label: "Real News (Confidence %)",
+          data: [],
+          borderColor: "#22c55e", // green
+          borderWidth: 2,
+          tension: 0.4
+        }
+      ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: {
-        duration: 700,
-        easing: "easeOutQuart"
-      },
       scales: {
-        x: {
-          ticks: { color: "#cbd5e1" },
-          grid: { color: "rgba(255,255,255,0.05)" }
-        },
         y: {
           min: 0,
-          max: 100,
-          ticks: {
-            stepSize: 10,
-            color: "#cbd5e1"
-          },
-          grid: { color: "rgba(255,255,255,0.05)" }
-        }
-      },
-      plugins: {
-        legend: {
-          labels: { color: "#e2e8f0" }
+          max: 100
         }
       }
     }
   });
+
+  console.log("✅ Chart created once");
 }
+
+
+
 
 
 
@@ -901,6 +932,7 @@ function renderChart() {
     handleSend();
   }
 });
+
 
 
   analyticsTab.addEventListener("click", () => {
@@ -938,7 +970,8 @@ function renderChart() {
     function appendMessage(msg, sender, inputText = "", aiLabel = "") {
       const div = document.createElement("div");
       div.classList.add("chat-bubble", sender);
-      div.textContent = msg;
+      div.textContent = msg.replace(/https?:\/\/\S+/g, "[URL submitted]");
+
 
       if (sender === "bot" && aiLabel) {
         const fb = document.createElement("div");
@@ -970,85 +1003,102 @@ function renderChart() {
       li.textContent = `${result} → ${text.slice(0, 60)}${text.length > 60 ? "..." : ""}`;
       historyList.prepend(li);
     }
+function isURL(text) {
+  return /^https?:\/\/.+/i.test(text);
+}
 
     // MAIN: Send to Python backend
     function handleSend() {
-      const newsInput = userInput.value.trim();
-      if (newsInput === "") return;
+  const newsInput = userInput.value.trim();
+  if (newsInput === "") return;
 
-      appendMessage(newsInput, "user");
-      userInput.value = "";
+  appendMessage(newsInput, "user");
+  userInput.value = "";
 
-      const loadingMsg = document.createElement("div");
-      loadingMsg.classList.add("chat-bubble", "bot");
-      loadingMsg.textContent = "🔍 Analyzing your input...";
-      messages.appendChild(loadingMsg);
-      messages.scrollTop = messages.scrollHeight;
+  const loadingMsg = document.createElement("div");
+  loadingMsg.classList.add("chat-bubble", "bot");
+  loadingMsg.textContent = "🔍 Analyzing your input...";
+  messages.appendChild(loadingMsg);
+  messages.scrollTop = messages.scrollHeight;
 
-      fetch("http://localhost:5000/api/detect", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: newsInput }),
-      })
-        .then(response => response.json())
-        .then(data => {
-          messages.removeChild(loadingMsg);
+  const payload = isURL(newsInput)
+  ? { url: newsInput }   // ✅ URL goes here
+  : { text: newsInput }; // ✅ normal text
 
-         appendMessage(
-  `AI Result: ${data.prediction} (Confidence: ${data.confidence}%)`,
-  "bot"
-);
+fetch("http://localhost:5000/api/detect", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  credentials: "include",
+  body: JSON.stringify(payload),
+})
 
-if (chart) {
-  chart.data.labels.push("Check " + chart.data.labels.length);
-  chart.data.datasets[0].data.push(data.confidence);
-  chart.update();
+    .then(response => response.json())
+    .then(data => {
+      messages.removeChild(loadingMsg);
+
+      // ---- BOT EXPLANATION ----
+      if (data.message) {
+        appendMessage(data.message, "bot");
+      } else {
+        appendMessage(
+          `Result: ${data.prediction}`,
+          "bot"
+        );
+      }
+
+      // ---- UPDATE ANALYTICS ONLY FOR NEWS ----
+      if (data.prediction === "FAKE" || data.prediction === "REAL") {
+        updateAnalytics(data.isFake, data.confidence);
+        addToHistory(newsInput, data.prediction);
+      }
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      messages.removeChild(loadingMsg);
+      appendMessage(
+        "⚠️ Backend error. Please ensure the server is running on port 5000.",
+        "bot"
+      );
+    });
 }
 
-          if (data.isFake) {
-            appendMessage("🧩 It shows signs of sensational or emotional language, which is common in fake news.", "bot");
-          } else {
-            appendMessage("📚 It looks more neutral and closer to reliable news style.", "bot");
-          }
 
-          updateAnalytics(data.isFake, data.confidence);
-          addToHistory(newsInput, data.prediction);
-        })
-        .catch(error => {
-          console.error("Error:", error);
-          messages.removeChild(loadingMsg);
-          appendMessage(
-            "⚠️ Sorry, an error occurred while detecting the news. Make sure the Python backend is running on port 5000.",
-            "bot"
-          );
-        });
-    }
+function updateAnalytics(isFake, confidence) {
+  if (!chart) return;
 
-   function updateAnalytics(isFake, confidence) {
-    if (!chart) return;
   total++;
   totalEl.textContent = total;
+
+  // X-axis label
+  chart.data.labels.push("Check " + total);
 
   if (isFake) {
     fake++;
     fakeEl.textContent = fake;
+
+    // Fake gets value, Real gets null
+    chart.data.datasets[0].data.push(confidence); // red
+    chart.data.datasets[1].data.push(null);       // green
   } else {
     real++;
     realEl.textContent = real;
+
+    // Real gets value, Fake gets null
+    chart.data.datasets[1].data.push(confidence); // green
+    chart.data.datasets[0].data.push(null);       // red
   }
 
-  chart.data.labels.push("Check " + total);
-  chart.data.datasets[0].data.push(confidence);
-
-  const MAX_VISIBLE_POINTS = 100; // ✅ scroll window size
+  const MAX_VISIBLE_POINTS = 100;
 
   if (chart.data.labels.length > MAX_VISIBLE_POINTS) {
-    chart.data.labels.shift();          // remove old label
-    chart.data.datasets[0].data.shift(); // remove old value
+    chart.data.labels.shift();
+    chart.data.datasets[0].data.shift();
+    chart.data.datasets[1].data.shift();
   }
 
-  chart.update(); // ✅ smooth scrolling animation
+  chart.update();
 }
+
 
     function sendFeedback(text, predicted, correct) {
       fetch("http://localhost:5000/api/feedback", {
