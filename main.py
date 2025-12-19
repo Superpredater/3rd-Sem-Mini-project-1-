@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Response, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 import uvicorn
 import joblib
@@ -12,16 +12,29 @@ import re
 import secrets
 import base64
 from redis import Redis
+import subprocess
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
+from openai import OpenAI, RateLimitError
+import requests
+from bs4 import BeautifulSoup
 
+# =====================================================
+# APP
+# =====================================================
 app = FastAPI()
 
-# -----------------------
+# =====================================================
+# OPENAI CLIENT
+# =====================================================
+OPENAI_API_KEY = "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"
+client = OpenAI(api_key=OPENAI_API_KEY)
+
+# =====================================================
 # REDIS SESSION STORE
-# -----------------------
+# =====================================================
 redis_db = Redis(host="localhost", port=6379, db=0)
-SESSION_EXPIRY = 60 * 60 * 24 * 30  # 30 days (keep user signed in)
+SESSION_EXPIRY = 86400  # 1 day
 
 def create_session(email: str):
     session_id = secrets.token_hex(32)
@@ -32,99 +45,182 @@ def get_session(request: Request):
     session_id = request.cookies.get("session_id")
     if not session_id:
         return None
-
     email = redis_db.get(f"session:{session_id}")
-    if email:
-        return email.decode()
-    return None
+    return email.decode() if email else None
 
 def destroy_session(request: Request):
     session_id = request.cookies.get("session_id")
     if session_id:
         redis_db.delete(f"session:{session_id}")
 
+def get_chat_history(email: str):
+    key = f"chat:{email}"
+    history = redis_db.get(key)
+    return json.loads(history) if history else []
 
-# -----------------------
+def save_chat_history(email: str, history):
+    redis_db.setex(f"chat:{email}", SESSION_EXPIRY, json.dumps(history))
+
+# =====================================================
+# URL TEXT EXTRACTION (ADDED, NOTHING REMOVED)
+# =====================================================
+def extract_text_from_url(url: str) -> str:
+    try:
+        res = requests.get(url, timeout=10)
+        soup = BeautifulSoup(res.text, "html.parser")
+
+        for tag in soup(["script", "style", "noscript"]):
+            tag.decompose()
+
+        text = " ".join(p.get_text() for p in soup.find_all("p"))
+        return text[:5000]
+    except:
+        return ""
+
+# =====================================================
+# EXPLAINABLE AI MESSAGE
+# =====================================================
+def generate_message(user, text, label, confidence):
+
+    if label == "CHAT":
+        return (
+            "Hey 👋\n\n"
+            "You can paste a news headline, article text, or URL.\n"
+            "I will tell you whether it is Fake or Real and explain why."
+        )
+
+    try:
+        res = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are an explainable AI assistant for fake news detection. "
+                        "Explain clearly:\n"
+                        "1) Why the news is FAKE or REAL\n"
+                        "2) Why the confidence percentage has that value\n"
+                        "Use simple language."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"News:\n{text}\n\n"
+                        f"Prediction: {label}\n"
+                        f"Confidence: {confidence}%"
+                    )
+                }
+            ],
+            max_tokens=250
+        )
+        return res.choices[0].message.content
+
+    except RateLimitError:
+        if label == "FAKE":
+            return (
+                "This news is classified as FAKE because it contains sensational language, "
+                "exaggerated claims, or emotionally manipulative wording.\n\n"
+                f"The confidence is {confidence}% because multiple fake-news indicators were detected."
+            )
+        else:
+            return (
+                "This news is classified as REAL because the language appears factual, "
+                "neutral, and similar to credible news reporting.\n\n"
+                f"The confidence is {confidence}% because very few suspicious indicators were found."
+            )
+def is_url(text: str) -> bool:
+    return text.startswith("http://") or text.startswith("https://")
+
+def is_conversation(text: str):
+    # URLs are NOT conversation
+    if is_url(text):
+        return False
+
+    return len(text.split()) <= 3
+
+
+# =====================================================
 # GOOGLE LOGIN CONFIG
-# -----------------------
+# =====================================================
 GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID_HERE"
-
 
 @app.get("/api/google/login")
 def google_login():
     google_auth_url = (
         "https://accounts.google.com/o/oauth2/v2/auth"
-        "?response_type=token"
+        "?response_type=code"
         f"&client_id={GOOGLE_CLIENT_ID}"
         "&redirect_uri=http://localhost:5000/api/google/callback"
         "&scope=openid%20email%20profile"
+        "&access_type=offline"
+        "&prompt=select_account"
     )
     return {"url": google_auth_url}
 
-
 @app.get("/api/google/callback")
 def google_callback(request: Request):
+    code = request.query_params.get("code")
+    if not code:
+        return {"success": False}
 
-    token = request.query_params.get("id_token")
+    token_url = "https://oauth2.googleapis.com/token"
+    payload = {
+        "code": code,
+        "client_id": GOOGLE_CLIENT_ID,
+        "client_secret": "YOUR_CLIENT_SECRET",
+        "redirect_uri": "http://localhost:5000/api/google/callback",
+        "grant_type": "authorization_code"
+    }
 
-    try:
-        idinfo = id_token.verify_oauth2_token(
-            token, google_requests.Request(), GOOGLE_CLIENT_ID
-        )
-    except:
-        return {"success": False, "message": "Google authentication failed"}
+    token_res = requests.post(token_url, data=payload).json()
+    idinfo = id_token.verify_oauth2_token(
+        token_res["id_token"],
+        google_requests.Request(),
+        GOOGLE_CLIENT_ID
+    )
 
     email = idinfo["email"]
-    name = idinfo.get("name", "Google User")
-    picture = idinfo.get("picture", "")
-
     users = load_users()
 
-    # auto-create user if not exists
     if not any(u["email"] == email for u in users):
         users.append({
-            "name": name,
+            "name": idinfo.get("name", "Google User"),
             "email": email,
             "phone": "",
             "password": "",
             "occupation": "Google Login",
-            "profileImage": picture
+            "profileImage": idinfo.get("picture", "")
         })
         save_users(users)
 
-    # create Redis session
     session_id = create_session(email)
-
     resp = JSONResponse({"success": True})
-    resp.set_cookie(
-        key="session_id",
-        value=session_id,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        max_age=SESSION_EXPIRY
-    )
+    resp.set_cookie("session_id", session_id, httponly=True)
     return resp
 
-
-# -----------------------
+# =====================================================
 # CORS
-# -----------------------
+# =====================================================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5500", "null"],
+    allow_origins=[
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+        "null"   # REQUIRED for file:// fake5.html
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-
-# -----------------------
+# =====================================================
 # MODELS
-# -----------------------
+# =====================================================
 class DetectRequest(BaseModel):
-    text: str
+    text: str | None = None
+    url: str | None = None
 
 class SignupModel(BaseModel):
     name: str
@@ -145,19 +241,15 @@ class UpdateProfileModel(BaseModel):
     occupation: str
     profileImage: str = ""
 
-
-# -----------------------
-# PATHS
-# -----------------------
+# =====================================================
+# FILE PATHS
+# =====================================================
 MODEL_PATH = "fake_news_model.joblib"
-CSV_PATH = "dynamic_dataset.csv"
-HISTORY_PATH = "history.json"
 USERS_PATH = "users.json"
 
-
-# -----------------------
+# =====================================================
 # USER DATABASE
-# -----------------------
+# =====================================================
 if not os.path.exists(USERS_PATH):
     with open(USERS_PATH, "w") as f:
         json.dump([], f)
@@ -170,80 +262,41 @@ def save_users(users):
     with open(USERS_PATH, "w") as f:
         json.dump(users, f, indent=4)
 
-
-# -----------------------
-# SIGNUP
-# -----------------------
+# =====================================================
+# AUTH ROUTES
+# =====================================================
 @app.post("/api/signup")
 def signup(user: SignupModel):
     users = load_users()
-
     for u in users:
-        if u["email"] == user.email or u["phone"] == user.phone:
-            return {"success": False, "message": "User already exists"}
-
+        if u["email"] == user.email:
+            return {"success": False}
     users.append(user.dict())
     save_users(users)
+    return {"success": True}
 
-    return {"success": True, "message": "Signup successful"}
-
-
-# -----------------------
-# LOGIN WITH REDIS SESSION
-# -----------------------
 @app.post("/api/login")
-def login(data: LoginModel, response: Response):
+def login(data: LoginModel):
     users = load_users()
-
     for u in users:
-        if (
-            data.identifier == u["email"]
-            or data.identifier == u["phone"]
-            or data.identifier.lower() == u["name"].lower()
-        ):
+        if data.identifier in [u["email"], u["phone"], u["name"]]:
             if data.password == u["password"]:
-
-                # create Redis session
                 session_id = create_session(u["email"])
-
                 resp = JSONResponse({"success": True, "user": u})
-                resp.set_cookie(
-                    key="session_id",
-                    value=session_id,
-                    httponly=True,
-                    secure=False,
-                    samesite="lax",
-                    max_age=SESSION_EXPIRY
-                )
+                resp.set_cookie("session_id", session_id, httponly=True)
                 return resp
+    return {"success": False}
 
-            return {"success": False, "message": "Wrong password"}
-
-    return {"success": False, "message": "User not found"}
-
-
-# -----------------------
-# AUTO-LOGIN / SESSION CHECK
-# -----------------------
 @app.get("/api/me")
 def me(request: Request):
     email = get_session(request)
-
     if not email:
         return {"loggedIn": False}
-
-    users = load_users()
-
-    for u in users:
+    for u in load_users():
         if u["email"] == email:
             return {"loggedIn": True, "user": u}
-
     return {"loggedIn": False}
 
-
-# -----------------------
-# LOGOUT
-# -----------------------
 @app.post("/api/logout")
 def logout(request: Request):
     destroy_session(request)
@@ -251,95 +304,83 @@ def logout(request: Request):
     resp.delete_cookie("session_id")
     return resp
 
-
-# -----------------------
-# UPDATE PROFILE
-# -----------------------
 @app.post("/api/update-profile")
 def update_profile(data: UpdateProfileModel):
     users = load_users()
-
     for u in users:
         if u["email"] == data.email:
             u.update(data.dict())
             save_users(users)
             return {"success": True, "user": u}
+    return {"success": False}
 
-    return {"success": False, "message": "User not found"}
-
-
-# -----------------------
-# PROFILE IMAGE UPLOAD
-# -----------------------
 @app.post("/api/upload-profile-image")
 def upload_profile_image(file: UploadFile = File(...)):
-    content = base64.b64encode(file.file.read()).decode("utf-8")
-    return {"base64": content}
+    return {"base64": base64.b64encode(file.file.read()).decode()}
 
-
-# -----------------------
-# FAKE NEWS DETECTION
-# -----------------------
-ml_model = None
-
-if os.path.exists(MODEL_PATH):
-    try:
-        ml_model = joblib.load(MODEL_PATH)
-    except:
-        pass
-
+# =====================================================
+# FAKE NEWS LOGIC
+# =====================================================
 def rule_based_predict(text: str):
     t = text.lower()
-
     suspicious = [
-        "shocking","breaking","miracle","cure","secret",
-        "you won't believe","exposed","bombshell","urgent",
-        "alert","viral","fake","scam","click here"
+        "shocking", "breaking", "miracle", "cure",
+        "secret", "exposed", "urgent", "click here"
     ]
-    emotional = ["terrifying","amazing","unbelievable","disaster","panic","fear","rage"]
-    promise = ["guaranteed","100% true","trust me","no evidence"]
-
-    score = 0
-    score += sum(1 for w in suspicious if w in t) * 18
-    score += sum(1 for w in emotional if w in t) * 12
-    score += len(re.findall(r"!!+|!{2,}", t)) * 10
-    score += len(re.findall(r"\b[A-Z]{4,}\b", text)) * 8
-    score += sum(1 for w in promise if w in t) * 15
-
-    confidence = min(score, 100)
+    score = sum(1 for w in suspicious if w in t) * 15
+    confidence = min(score + 30, 95)
     label = "FAKE" if confidence >= 50 else "REAL"
     return label, confidence
 
-def predict(text):
-    if ml_model:
-        try:
-            label = ml_model.predict([text])[0]
-            if hasattr(ml_model, "predict_proba"):
-                proba = ml_model.predict_proba([text])[0]
-                confidence = float(max(proba) * 100)
-            else:
-                confidence = 92.0
-            return label, confidence
-        except:
-            pass
-
-    return rule_based_predict(text)
-
-
+# =====================================================
+# DETECT API
+# =====================================================
 @app.post("/api/detect")
-def detect(req: DetectRequest):
-    label, confidence = predict(req.text)
+def detect(req: DetectRequest, request: Request):
+    email = get_session(request) or "guest"
+
+    # ---------------- CHAT MODE ----------------
+    if req.text and is_conversation(req.text):
+        return {
+            "prediction": "CHAT",
+            "message": generate_message(email, req.text, "CHAT", 0)
+        }
+
+    # ---------------- URL MODE (KEY FIX) ----------------
+    if req.text and is_url(req.text):
+        article_text = extract_text_from_url(req.text)
+
+        if not article_text.strip():
+            return {
+                "prediction": "ERROR",
+                "message": "⚠️ Unable to extract article content from this URL."
+            }
+
+        label, confidence = rule_based_predict(article_text)
+        message = generate_message(email, article_text, label, confidence)
+
+        return {
+            "prediction": label,
+            "confidence": round(confidence, 2),
+            "isFake": label == "FAKE",
+            "message": message
+        }
+
+    # ---------------- NORMAL TEXT NEWS ----------------
+    text = req.text or ""
+    label, confidence = rule_based_predict(text)
+    message = generate_message(email, text, label, confidence)
 
     return {
         "prediction": label,
         "confidence": round(confidence, 2),
-        "isFake": label == "FAKE"
+        "isFake": label == "FAKE",
+        "message": message
     }
 
 
-# -----------------------
-# RUN SERVER
-# -----------------------
+# =====================================================
+# RUN
+# =====================================================
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=5000, reload=True)
-
